@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express(); 
 const port = process.env.PORT || 4000 ;
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 //middleware 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +23,7 @@ async function run(){
     await  client.connect();
 
     const toolsCollection = client.db("cycle").collection("tools");
+    const orderCollection = client.db("cycle").collection("order");
 
     //get all tools
     app.get('/tools',async(req,res)=>{
@@ -31,6 +32,18 @@ async function run(){
         const tools = await cursor.toArray();
         res.send(tools);
     });
+//single tool details 
+app.get('/tools/:id',async(req,res)=>{
+    const id = req.params.id;
+    const query ={_id:ObjectId(id)};
+    const tool = await  toolsCollection.findOne(query);
+    console.log(tool);
+    res.send(tool);  
+    });
+//user order
+
+
+
     console.log("cycle db connected");
    }finally{
 
