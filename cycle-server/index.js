@@ -59,6 +59,14 @@ async function run(){
         const tools = await cursor.toArray();
         res.send(tools);
     });
+
+    //add tools
+app.post('/addTools',verifyJwt,async(req,res)=>{
+    const tools = req.body;
+    const result = await toolsCollection.insertOne(tools);
+    res.send(result );
+});
+
 //single tool details 
 app.get('/tools/:id',async(req,res)=>{
     const id = req.params.id;
