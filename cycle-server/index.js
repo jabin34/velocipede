@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express(); 
 const port = process.env.PORT || 4000 ;
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 //middleware 
 app.use(cors());
@@ -24,6 +25,7 @@ async function run(){
 
     const toolsCollection = client.db("cycle").collection("tools");
     const orderCollection = client.db("cycle").collection("order");
+    const userCollection = client.db("cycle").collection("users");
 
     //get all tools
     app.get('/tools',async(req,res)=>{
@@ -62,6 +64,25 @@ app.post('/order',async(req,res)=>{
     const result = await orderCollection.insertOne(order);
     res.send( result);
    });
+// get all user 
+app.get('/user', async(req,res)=>{
+    const user = await userCollection.find().toArray();
+    res.send(user);
+});
+//SAVE USER
+app.put('/user/:email',async(req,res)=>{
+    const email = req.params.email;
+    const user = req.body;
+    const filter ={email:email};
+    const options = {upsert:true};
+    const updatedoc = {
+        $set:user,
+    };
+    console.log(user);
+    const result = await userCollection.updateOne(filter,updatedoc,options);
+    const token = jwt.sign({email:email},process.env.ACCESS_TOKEN_SECRECT,{expiresIn:'30d'})
+    res.send({result,token});
+ });
 
 
     console.log("cycle db connected");
