@@ -58,12 +58,19 @@ app.put('/tools/:id',async(req,res)=>{
     res.send(tool);  
     });
 
-//user order
+//user order save in database 
 app.post('/order',async(req,res)=>{
     const order = req.body;
     const result = await orderCollection.insertOne(order);
     res.send( result);
    });
+// get all order data 
+app.get('/order', async(req,res)=>{
+    const user = await orderCollection.find().toArray();
+    res.send(user);
+});
+
+
 // get all user 
 app.get('/user', async(req,res)=>{
     const user = await userCollection.find().toArray();
