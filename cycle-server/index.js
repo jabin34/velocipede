@@ -49,6 +49,13 @@ async function run(){
             }
     }
     
+//delete single tool
+    app.delete('/tools/:id',verifyJwt,async(req,res)=>{
+        const id= req.params.id;
+        const filter = {_id:ObjectId(id)};
+        const result = await toolsCollection.deleteOne(filter);
+        res.send(result);
+    });
 
 
 
