@@ -116,11 +116,11 @@ app.put('/user/:email',async(req,res)=>{
     res.send({result,token});
  });
  //get my order
- app.get('/order/:email',verifyJwt,async(req,res)=>{
-     const decodedEmail = req.decoded.email
+ app.get('/order',verifyJwt,async(req,res)=>{
+     const decodedEmail = req.decoded.email;
     const email = req.params.email;
     if(decodedEmail===email){
-        const query = { email:email.email};
+        const query = { email:email};
         const result = await orderCollection.find(query).toArray();
         console.log(result);
         return res.send(result);
@@ -136,7 +136,7 @@ app.put('/user/:email',async(req,res)=>{
     const email = req.params.email;  
     const requester = req.decoded.email;
     const reqAccount = await userCollection.findOne({email:requester});
-    if(reqAccount.role=="admin"){
+    if(reqAccount.role === "admin"){
         const filter ={email:email};
         const updatedoc = {
             $set:{role:'admin'},
@@ -149,8 +149,18 @@ app.put('/user/:email',async(req,res)=>{
     }
         
     });
-
-
+    //admin recognize
+    app.get('/admin/:email',async(req,res)=>{
+        const email = req.params.email;
+        const user = await userCollection.findOne({email:email});
+        let isAdmin = false;
+        if(user.role === 'admin'){
+            isAdmin = true;
+        }
+        
+        console.log(user);
+        res.send({admin:isAdmin});
+     });
     console.log("cycle db connected");
    }finally{
 
