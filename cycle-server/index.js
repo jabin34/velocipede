@@ -13,11 +13,6 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vycem.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-// client.connect(err => {
-//   const collection = client.db("cycle").collection("tools");
-//   // perform actions on the collection object
-//   client.close();
-// });
 
 async function run(){
    try{
@@ -39,7 +34,7 @@ app.get('/tools/:id',async(req,res)=>{
     const id = req.params.id;
     const query ={_id:ObjectId(id)};
     const tool = await  toolsCollection.findOne(query);
-    console.log(tool);
+    //console.log(tool);
     res.send(tool);  
     });
 
@@ -54,7 +49,7 @@ app.put('/tools/:id',async(req,res)=>{
         }
     }
     const tool = await  toolsCollection.updateOne(filter,updatedoc);
-    console.log(tool);
+    // console.log(tool);
     res.send(tool);  
     });
 
@@ -85,10 +80,18 @@ app.put('/user/:email',async(req,res)=>{
     const updatedoc = {
         $set:user,
     };
-    console.log(user);
+    //console.log(user);
     const result = await userCollection.updateOne(filter,updatedoc,options);
     const token = jwt.sign({email:email},process.env.ACCESS_TOKEN_SECRECT,{expiresIn:'30d'})
     res.send({result,token});
+ });
+ //get my order
+ app.get('/order/:email',async(req,res)=>{
+    const email = req.params.email;
+    const query = { email:email.email};
+    const result = await orderCollection.find(query).toArray();
+    console.log(result);
+    res.send(result);
  });
 
 
