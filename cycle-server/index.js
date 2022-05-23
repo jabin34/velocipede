@@ -13,6 +13,21 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vycem.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+function verifyJwt(req,res,next){
+    const authHeader = req.headers.authorization;
+
+    if(!authHeader){
+        return res.status(401).send({message:"Unauthorized access!!"})
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token,process.env.ACCESS_TOKEN_SECRECT,function(err,decoded){
+        if(err){
+            res.status(403).send({message:"Forbidden !!"});
+        }
+        req.decoded = decoded;
+        next();
+    });
+}
 
 async function run(){
    try{
@@ -21,6 +36,21 @@ async function run(){
     const toolsCollection = client.db("cycle").collection("tools");
     const orderCollection = client.db("cycle").collection("order");
     const userCollection = client.db("cycle").collection("users");
+
+    //admin verify
+    const  verifyAdmin = async( req,res,next)=>{
+        const requester = req.decoded.email;
+        const requesterAccount = await userCollection.findOne({email:requester});
+        if(requesterAccount.role ==='admin'){
+            next();
+            }
+            else{
+                res.status(403).send({message:'forbidden'});
+            }
+    }
+    
+
+
 
     //get all tools
     app.get('/tools',async(req,res)=>{
@@ -67,7 +97,7 @@ app.get('/order', async(req,res)=>{
 
 
 // get all user 
-app.get('/user', async(req,res)=>{
+app.get('/user',verifyJwt, async(req,res)=>{
     const user = await userCollection.find().toArray();
     res.send(user);
 });
@@ -86,13 +116,39 @@ app.put('/user/:email',async(req,res)=>{
     res.send({result,token});
  });
  //get my order
- app.get('/order/:email',async(req,res)=>{
+ app.get('/order/:email',verifyJwt,async(req,res)=>{
+     const decodedEmail = req.decoded.email
     const email = req.params.email;
-    const query = { email:email.email};
-    const result = await orderCollection.find(query).toArray();
-    console.log(result);
-    res.send(result);
+    if(decodedEmail===email){
+        const query = { email:email.email};
+        const result = await orderCollection.find(query).toArray();
+        console.log(result);
+        return res.send(result);
+    }
+    else{
+ return res.status(403).send({message:'Forbidden Access!!!'});
+    }
+   
  });
+
+ //make admin
+ app.put('/user/admin/:email',verifyJwt,async(req,res)=>{
+    const email = req.params.email;  
+    const requester = req.decoded.email;
+    const reqAccount = await userCollection.findOne({email:requester});
+    if(reqAccount.role=="admin"){
+        const filter ={email:email};
+        const updatedoc = {
+            $set:{role:'admin'},
+        };
+        const result = await userCollection.updateOne(filter,updatedoc);
+        res.send({result});
+    }
+    else{
+        return res.status(403).send({message:'Forbidden Access!!!'});
+    }
+        
+    });
 
 
     console.log("cycle db connected");
