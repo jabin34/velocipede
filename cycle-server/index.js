@@ -116,7 +116,7 @@ app.put('/user/:email',async(req,res)=>{
     res.send({result,token});
  });
  //get my order
- app.get('/order',verifyJwt,async(req,res)=>{
+ app.get('/order/:email',verifyJwt,async(req,res)=>{
      const decodedEmail = req.decoded.email;
     const email = req.params.email;
     if(decodedEmail===email){
@@ -168,7 +168,7 @@ app.put('/user/:email',async(req,res)=>{
             isAdmin = true;
         }
         
-        console.log(user);
+       // console.log(user);
         res.send({admin:isAdmin});
      });
     console.log("cycle db connected");
