@@ -40,8 +40,28 @@ app.get('/tools/:id',async(req,res)=>{
     console.log(tool);
     res.send(tool);  
     });
-//user order
 
+//update qty 
+app.put('/tools/:id',async(req,res)=>{
+    const id = req.params.id;
+    const data = req.body;
+    const filter ={_id:ObjectId(id)};
+    const updatedoc = {
+        $set:{
+            available: data.availableProduct,
+        }
+    }
+    const tool = await  toolsCollection.updateOne(filter,updatedoc);
+    console.log(tool);
+    res.send(tool);  
+    });
+
+//user order
+app.post('/order',async(req,res)=>{
+    const order = req.body;
+    const result = await orderCollection.insertOne(order);
+    res.send( result);
+   });
 
 
     console.log("cycle db connected");
