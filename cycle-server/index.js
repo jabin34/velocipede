@@ -165,6 +165,15 @@ app.put('/user/:email',async(req,res)=>{
         
     });
 
+//Load single userdata
+app.get('/user/:email',verifyJwt, async(req,res)=>{
+    const email= req.params.email;
+    const filter = {email:email};
+    const result = await userCollection.findOne(filter);
+    res.send(result);
+
+});
+
     //delete user
     app.delete('/user/:email',verifyJwt, async(req,res)=>{
         const email= req.params.email;
