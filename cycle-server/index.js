@@ -36,6 +36,7 @@ async function run(){
     const toolsCollection = client.db("cycle").collection("tools");
     const orderCollection = client.db("cycle").collection("order");
     const userCollection = client.db("cycle").collection("users");
+    const userReviewCollection = client.db("cycle").collection("review");
 
     //admin verify
     const  verifyAdmin = async( req,res,next)=>{
@@ -195,6 +196,15 @@ app.get('/user/:email',verifyJwt, async(req,res)=>{
        // console.log(user);
         res.send({admin:isAdmin});
      });
+
+//user review add api
+app.post('/review',verifyJwt,async(req,res)=>{
+    const review = req.body;
+    const result = await userReviewCollection.insertOne(review);
+    res.send(result );
+});
+
+
     console.log("cycle db connected");
    }finally{
 
