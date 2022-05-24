@@ -4,6 +4,7 @@ const app = express();
 const port = process.env.PORT || 4000 ;
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const stripe = require("stripe")(process.env.STRIPE_SECTET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 //middleware 
 app.use(cors());
@@ -37,7 +38,7 @@ async function run(){
     const orderCollection = client.db("cycle").collection("order");
     const userCollection = client.db("cycle").collection("users");
     const userReviewCollection = client.db("cycle").collection("review");
-
+    const paymentCollection = client.db("cycle").collection("payments");
     //admin verify
     const  verifyAdmin = async( req,res,next)=>{
         const requester = req.decoded.email;
@@ -147,6 +148,30 @@ app.put('/user/:email',async(req,res)=>{
    
  });
 
+ //get particular order by id 
+app.get('/particularOrder/:id',verifyJwt,async(req,res)=>{
+ const id = req.params.id;
+ const query = {_id:ObjectId(id)};
+ const order = await orderCollection.findOne(query);
+ res.send(order);
+});
+//update  particular order by id 
+app.patch('/particularOrder/:id',verifyJwt,async(req,res)=>{
+    const id = req.params.id;
+    const payment = req.body;
+    const filter = {_id: ObjectId(id)};
+    const updatedoc = {
+        $set:{
+            paid:true,
+            transactionId: payment.transactionId,
+        }
+    };
+    const order = await orderCollection.updateOne(filter,updatedoc);
+    const result = await paymentCollection.insertOne(payment);
+    res.send(updatedoc);
+   });
+
+
  //make admin
  app.put('/user/admin/:email',verifyJwt,async(req,res)=>{
     const email = req.params.email;  
@@ -203,7 +228,24 @@ app.post('/review',verifyJwt,async(req,res)=>{
     const result = await userReviewCollection.insertOne(review);
     res.send(result );
 });
+//get all review 
+app.get('/review',verifyJwt,async(req,res)=>{
+    const result = await userReviewCollection.find().sort({_id:-1}).toArray();
+    res.send(result );
+});
 
+//payment gateway
+app.post('/create-payment-intent',verifyJwt, async(req,res)=>{
+    const service = req.body;
+    const price = service.total;
+    const amount = price*100;
+    const paymentIntent = await stripe.paymentIntents.create({
+    amount:amount,
+    currency:'usd',
+    payment_method_types:['card']
+    });
+    res.send({clientSecret: paymentIntent.client_secret})
+});
 
     console.log("cycle db connected");
    }finally{
