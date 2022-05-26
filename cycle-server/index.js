@@ -148,6 +148,14 @@ app.put('/user/:email',async(req,res)=>{
    
  });
 
+ //delete order by user
+ app.delete('/order/:id',verifyJwt, async(req,res)=>{
+    const id= req.params.id;
+    const query = {_id:ObjectId(id)};
+    const result = await orderCollection.deleteOne(query);
+    res.send(result);
+});
+
  //get particular order by id 
 app.get('/particularOrder/:id',verifyJwt,async(req,res)=>{
  const id = req.params.id;
@@ -168,6 +176,19 @@ app.patch('/particularOrder/:id',verifyJwt,async(req,res)=>{
     };
     const order = await orderCollection.updateOne(filter,updatedoc);
     const result = await paymentCollection.insertOne(payment);
+    res.send(updatedoc);
+   });
+// admin update 
+app.patch('/shippedorder/:id',verifyJwt,async(req,res)=>{
+    const id = req.params.id;
+    const payment = req.body;
+    const filter = {_id: ObjectId(id)};
+    const updatedoc = {
+        $set:{
+            shipped:true,
+        }
+    };
+    const order = await orderCollection.updateOne(filter,updatedoc);
     res.send(updatedoc);
    });
 
@@ -229,7 +250,7 @@ app.post('/review',verifyJwt,async(req,res)=>{
     res.send(result );
 });
 //get all review 
-app.get('/review',verifyJwt,async(req,res)=>{
+app.get('/review',async(req,res)=>{
     const result = await userReviewCollection.find().sort({_id:-1}).toArray();
     res.send(result );
 });
